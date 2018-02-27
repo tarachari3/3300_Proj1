@@ -14,6 +14,8 @@
 <script>
 var mapData;
 var chocolateData;
+var countryScores = {};
+var countryAverages = {};
 var svg = d3.select("svg");
 
 var projection = d3.geoEquirectangular().scale(75);
@@ -33,7 +35,25 @@ function callback(error, rawMap, rawChocolate) {
     mapData = rawMap.features.forEach(function (d, i) {
         
     });
-
+    // create countryScores: maps each country to array of scores
+    for (i = 0; i < chocolateData.length; i++) {
+        var country = chocolateData[i]["Company\nLocation"];
+        if (!(country in countryScores)) {
+            countryScores[country] = [];
+        }
+        countryScores[country].push(chocolateData[i]["Rating"]);
+    }
+    // create countryAverages: maps each country to average score
+    for (var key in countryScores) {
+        var ratingsArray = countryScores[key];
+        var average = 0;
+        for(var i = 0; i < ratingsArray.length; i++) {
+            average += parseFloat(ratingsArray[i]);
+        }
+        average /= ratingsArray.length;
+        countryAverages[key] = average;
+    }
+    
     displayMap();
     displayChocolate();
 }
