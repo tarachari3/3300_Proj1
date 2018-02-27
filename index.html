@@ -9,6 +9,42 @@
 </style>
 </head>
 <body>
+<svg height="800" width="900"></svg> // change this to make it look nicer later
+<script>
+var mapData;
+var chocolateData;
+var svg = d3.select("svg");
 
+var projection = d3.geoEquirectangular().scale(75);
+var pathGenerator = d3.geoPath().projection(projection);
+
+d3.queue()
+.defer(d3.json, "countries.geo.json")
+.defer(d3.csv, "flavors_of_cacao.csv")
+.await(callback);
+
+function callback(error, rawMap, rawChocolate) {
+    if (error) {
+        console.log(error);
+    }
+    chocolateData = rawChocolate;
+    
+    mapData = rawMap.features.forEach(function (d, i) {
+        
+    });
+
+    displayMap();
+    displayChocolate();
+}
+
+function displayMap() {
+
+}
+
+function displayChocolate() {
+
+}
+
+</script>
 </body>
 </html>
