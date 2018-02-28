@@ -10,22 +10,25 @@ path.country { fill: #ccc; stroke: #888;; }
 </style>
 </head>
 <body>
-<<<<<<< HEAD
-<svg height="600" width="900"></svg> 
+<svg height="400" width="900"></svg> 
 <!-- change this to make it look nicer later -->
-=======
-<svg height="800" width="900"></svg> 
-<!--    change this to make it look nicer later-->
->>>>>>> origin
 <script>
 var mapData;
 var chocolateData;
 var countryScores = {};
 var countryAverages = {};
+var averageValues = [];
 var svg = d3.select("svg");
 
+// used for drawing countries
+var paths;
+var countries; 
 var projection = d3.geoEquirectangular().scale(150);
 var pathGenerator = d3.geoPath().projection(projection);
+var sequentialColors = ['#ffffff', '#2A7F31'];
+var mapScale = d3.scaleLinear()
+.domain([1,5])
+.range(sequentialColors);
 
 d3.queue()
 .defer(d3.json, "countries.geo.json")
@@ -59,27 +62,32 @@ function callback(error, rawMap, rawChocolate) {
         average /= ratingsArray.length;
         countryAverages[key] = average;
     }
-    
-    displayMap();
+
+    Object.keys(countryAverages).map(function (v, i) {
+        averageValues.push(Number(countryAverages[v]));
+    });
+
     displayChocolate();
+    displayMap();
 }
 
-var paths;
-var countries; 
+// display and color in map countries with scales
 function displayMap() {
     paths = svg.selectAll("path.country")
     .data(mapData);
 
-
     paths = paths.enter().append("path")
     .attr("class", "country").merge(paths);
 
-    paths.attr("d", function (country) {
+    paths
+    .style("fill", function (country) {
+        var average = countryAverages[country.properties.name];
+        if (average) {
+            return mapScale(average);
+        }
+    })
+    .attr("d", function (country) {
         return pathGenerator(country);
-    });
-
-    mapData.forEach(element => {
-        
     });
 }
 
