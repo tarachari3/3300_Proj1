@@ -57,14 +57,14 @@ var mapData;
 var chocolateData;
 var countryScores = {};
 var countryAverages = {};
-var averageValues = [];
+var countryPercentages = {}; // total percent cocoa by country
+var countryPercentageAvgs = {}; // average percent cocoa by country
 var barSvg = d3.select("#barPlot");
 var mapSvg = d3.select("#map");
 
 
 // used for drawing countries
 var paths;
-var countries; 
 var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
 var sequentialColors = ['#0099ff', '#990000']; //[worst, best]
@@ -91,8 +91,10 @@ function callback(error, rawMap, rawChocolate) {
         var country = chocolateData[i]["Company\nLocation"];
         if (!(country in countryScores)) {
             countryScores[country] = [];
+            countryPercentages[country] = [];
         }
         countryScores[country].push(chocolateData[i]["Rating"]);
+        countryPercentages[country].push(parseFloat(chocolateData[i]["Cocoa\nPercent"])/100);
     }
     // create countryAverages: maps each country to average score
     for (var key in countryScores) {
@@ -104,10 +106,11 @@ function callback(error, rawMap, rawChocolate) {
         average /= ratingsArray.length;
         countryAverages[key] = average;
     }
-
-    Object.keys(countryAverages).map(function (v, i) {
-        averageValues.push(Number(countryAverages[v]));
-    });
+    // create countryPercentAvgs: maps each country to average % cocoa
+    for (var key in countryPercentages) {
+        var sum = countryPercentages[key].reduce(function (a, b) { return a + b; });
+        countryPercentageAvgs[key] = (sum / countryPercentages[key].length).toFixed(4); // round to 4 decimal places
+    }
 
     displayChocolate();
     displayMap();
