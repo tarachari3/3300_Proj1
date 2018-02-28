@@ -10,11 +10,18 @@ path.country { fill: #ccc; stroke: #888;; }
 </style>
 </head>
 <body>
+<<<<<<< HEAD
 <svg height="600" width="900"></svg> 
 <!-- change this to make it look nicer later -->
+=======
+<svg height="800" width="900"></svg> 
+<!--    change this to make it look nicer later-->
+>>>>>>> origin
 <script>
 var mapData;
 var chocolateData;
+var countryScores = {};
+var countryAverages = {};
 var svg = d3.select("svg");
 
 var projection = d3.geoEquirectangular().scale(150);
@@ -34,6 +41,25 @@ function callback(error, rawMap, rawChocolate) {
     mapData = rawMap.features;
     projection.fitExtent([[0,0], [svg.attr("width"), svg.attr("height")]], rawMap);
 
+    // create countryScores: maps each country to array of scores
+    for (i = 0; i < chocolateData.length; i++) {
+        var country = chocolateData[i]["Company\nLocation"];
+        if (!(country in countryScores)) {
+            countryScores[country] = [];
+        }
+        countryScores[country].push(chocolateData[i]["Rating"]);
+    }
+    // create countryAverages: maps each country to average score
+    for (var key in countryScores) {
+        var ratingsArray = countryScores[key];
+        var average = 0;
+        for(var i = 0; i < ratingsArray.length; i++) {
+            average += parseFloat(ratingsArray[i]);
+        }
+        average /= ratingsArray.length;
+        countryAverages[key] = average;
+    }
+    
     displayMap();
     displayChocolate();
 }
