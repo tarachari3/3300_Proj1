@@ -7,16 +7,35 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 <style>
 body { font-family: 'Barlow Condensed', Calibri, sans-serif; }
-path.country { fill: #ccc; stroke: #888; }
+path.country { fill: #000; stroke: #ffffff; }
+
+/* Gradient styling*/
+.stop-left {
+    stop-color: #0099ff;  /* blue */
+}
+
+.stop-right {
+    stop-color: #990000;  /* maroon */
+}
+
+.filled {
+    fill: url(#mainGradient);
+}
+
+.outlined {
+    fill:   none;
+    stroke: url(#mainGradient);
+    stroke-width: 4;
+}
+
 </style>
 </head>
 <body>
-<h3 align="center" style="margin-bottom:0px;margin-top:20px; font-size:40px">Who Produces the World's Best Chocolates?</h3>
+<h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3>
 
-<svg id="barPlot" height="800" width="250" style="float:left"></svg> 
+<svg id="barPlot" height="1000" width="250" style="float:left"></svg> 
 <svg id="map" height="600" width="950" style="float:center"></svg>  <!-- 400 900 -->
 
-<!-- change this to make it look nicer later -->
 <script>
 var mapData;
 var chocolateData;
@@ -32,9 +51,9 @@ var paths;
 var countries; 
 var projection = d3.geoEquirectangular().scale(150);
 var pathGenerator = d3.geoPath().projection(projection);
-var sequentialColors = ['#ffffff', '#2A7F31'];
+var sequentialColors = ['#0099ff', '#990000']; //[worst, best]
 var mapScale = d3.scaleLinear()
-.domain([1,5])
+.domain([2.5,3.75]) //(min-.5,max)
 .range(sequentialColors);
 
 d3.queue()
@@ -90,7 +109,7 @@ function displayMap() {
     .style("fill", function (country) {
         var average = countryAverages[country.properties.name];
         if (average) {
-            return mapScale(average);
+            return mapScale(Math.pow(average,1));
         }
     })
     .attr("d", function (country) {
@@ -105,38 +124,35 @@ function displayChocolate() {
 .attr("height", 800)
 .style("border","none"); */
 
-var barHeight = 15;
+  var barHeight = 15;
 
-var legendW = 10;
-var legendH = 10;
+  var legendW = 100;
+  var legendH = 20;
 
-var rateColor = "#2A7F31";
-var beanColor = "#819fae";
+  var rateColor = "#2A7F31";
+  var beanColor = "#819fae";
 
 
-var rankData = [];
-  //console.log(data); 
+  var rankData = [];
+    //console.log(data); 
 
- // get rankData from countryAverages
- var count = 0;
-for(var key in countryAverages){
-  count++;
-  if(count <= 50){
-    rankData.push({rating:countryAverages[key].toFixed(2),country:key});
+   // get rankData from countryAverages
+   var count = 0;
+  for(var key in countryAverages){
+      rankData.push({rating:countryAverages[key],country:key});
+
   }
 
-}
+  rankData.sort(function(a, b) {
+    return b.rating - a.rating;
+  });
 
-rankData.sort(function(a, b) {
-  return b.rating - a.rating;
-});
-
-
+//rankData = rankData.slice(0,50);
 
   var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
   rankScale = d3.scaleLinear()
   .domain(rankExtent)
-  .range([30, 120]);
+  .range([30, 170]);
 
   /* var countExtent = d3.extent(rankData, function (d) { return d.count; });
   countScale = d3.scaleLinear()
@@ -145,21 +161,52 @@ rankData.sort(function(a, b) {
 
  
 
-  //----- legend ----
-    //rating
-   barSvg.append("rect")
-    .attr("width", legendW)
-    .attr("height", legendH) //adjust spacing b/w bars
-    .attr("x", 50)
-    .attr("y", 20)
-    .style("fill",rateColor);
+  //------- legend ---------
+    //color scale
+  var defs = barSvg.append("defs");
+  var mainGradient = defs.append('linearGradient')
+  .attr('id', 'mainGradient');
 
-    barSvg.append("text")
-    .attr("x", 50+legendW+4 )
-    .attr("y", 20+legendH/2)
-    .attr("dy", ".35em")
-    .style("font-size","16px")
-    .text("5 POINT RATING");
+  //create stops for colors
+  mainGradient.append('stop')
+  .attr('class', 'stop-left')
+  .attr('offset', '0');
+
+  mainGradient.append('stop')
+  .attr('class', 'stop-right')
+  .attr('offset', '1');
+
+
+  //rating
+ barSvg.append("rect")
+  .classed('filled', true)
+  .attr("width", legendW)
+  .attr("height", legendH) //adjust spacing b/w bars
+  .attr("x", 20)
+  .attr("y", 20);
+
+  barSvg.append("text")
+  .attr("x", 20+legendW+4 )
+  .attr("y", 20+legendH/2)
+  .attr("dy", ".35em")
+  .style("font-size","16px")
+  .text("5 POINT RATING");
+
+  barSvg.append("text")
+  .attr("x", 20-10 )
+  .attr("y", legendH/2)
+  .attr("dy", ".35em")
+  .style("font-size","16px")
+  .text("Worst");
+
+  barSvg.append("text")
+  .attr("x", legendW+4)
+  .attr("y", legendH/2)
+  .attr("dy", ".35em")
+  .style("font-size","16px")
+  .text("Best");
+  //-----------------------------
+
 
     //bean count
    /* svgBar.append("rect")
@@ -187,7 +234,7 @@ rankData.sort(function(a, b) {
   bar.append("rect")
       .attr("width", function(d) { return rankScale(d.rating); })
       .attr("height", barHeight - 3) //adjust spacing b/w bars
-      .style("fill",function(d) { return mapScale(d.rating); });
+      .style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); });
 
 
  /* bar.append("rect")
@@ -202,16 +249,17 @@ rankData.sort(function(a, b) {
       .attr("x", function(d) { return rankScale(d.rating)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
       .attr("y", barHeight / 2)
       .attr("dy", ".35em")
+      .style("font-size","14px")
       .text(function(d) { return d.country; });
 
-  //first bar text
+  //first bar rating text
   bar.append("text")
       .attr("x", 5)
       .attr("y", barHeight / 2)
       .attr("dy", ".35em")
       .style("fill","white")
       .style("font-size","13px")
-      .text(function(d) { return d.rating; });
+      .text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
 
   //2nd bar text
  /* bar.append("text")
