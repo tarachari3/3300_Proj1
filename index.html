@@ -1,16 +1,21 @@
 <html>
 <head>
 <title>INFO 3300 - Data-driven Web Applications</title>
-<link href="https://fonts.googleapis.com/css?family=Alegreya|Alegreya+Sans" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Barlow+Condensed" rel="stylesheet">
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 <style>
-path.country { fill: #ccc; stroke: #888;; }
+body { font-family: 'Barlow Condensed', Calibri, sans-serif; }
+path.country { fill: #ccc; stroke: #888; }
 </style>
 </head>
 <body>
-<svg id="map" height="400" width="900"></svg> 
+<h3 align="center" style="margin-bottom:0px;margin-top:20px; font-size:40px">Who Produces the World's Best Chocolates?</h3>
+
+<svg id="barPlot" height="800" width="250" style="float:left"></svg> 
+<svg id="map" height="600" width="950" style="float:center"></svg>  <!-- 400 900 -->
+
 <!-- change this to make it look nicer later -->
 <script>
 var mapData;
@@ -18,7 +23,9 @@ var chocolateData;
 var countryScores = {};
 var countryAverages = {};
 var averageValues = [];
+var barSvg = d3.select("#barPlot");
 var mapSvg = d3.select("#map");
+
 
 // used for drawing countries
 var paths;
@@ -93,8 +100,134 @@ function displayMap() {
 
 function displayChocolate() {
 
+/* var svgBar = d3.select("body").append("svg")
+.attr("width", 300)
+.attr("height", 800)
+.style("border","none"); */
+
+var barHeight = 15;
+
+var legendW = 10;
+var legendH = 10;
+
+var rateColor = "#2A7F31";
+var beanColor = "#819fae";
+
+
+var rankData = [];
+  //console.log(data); 
+
+ // get rankData from countryAverages
+ var count = 0;
+for(var key in countryAverages){
+  count++;
+  if(count <= 50){
+    rankData.push({rating:countryAverages[key].toFixed(2),country:key});
+  }
+
+}
+
+rankData.sort(function(a, b) {
+  return b.rating - a.rating;
+});
+
+
+
+  var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
+  rankScale = d3.scaleLinear()
+  .domain(rankExtent)
+  .range([30, 120]);
+
+  /* var countExtent = d3.extent(rankData, function (d) { return d.count; });
+  countScale = d3.scaleLinear()
+  .domain(countExtent)
+  .range([30, 120]); */
+
+ 
+
+  //----- legend ----
+    //rating
+   barSvg.append("rect")
+    .attr("width", legendW)
+    .attr("height", legendH) //adjust spacing b/w bars
+    .attr("x", 50)
+    .attr("y", 20)
+    .style("fill",rateColor);
+
+    barSvg.append("text")
+    .attr("x", 50+legendW+4 )
+    .attr("y", 20+legendH/2)
+    .attr("dy", ".35em")
+    .style("font-size","16px")
+    .text("5 POINT RATING");
+
+    //bean count
+   /* svgBar.append("rect")
+    .attr("width", legendW)
+    .attr("height", legendH) //adjust spacing b/w bars
+    .attr("x", 10*legendW)
+    .attr("y", 0)
+    .style("fill",beanColor);
+
+    svgBar.append("text")
+    .attr("x", 10*legendW+legendW+2)
+    .attr("y", legendH/2)
+    .attr("dy", ".35em")
+    .style("font-size","12px")
+    .text("Bean-blend Types Produced"); */
+
+  //make sure all bars begin at different y
+  var bar = barSvg.selectAll("g")
+      .data(rankData)
+    .enter().append("g")
+      .attr("transform", function(d, i) { return "translate(0," + (i+3) * barHeight + ")"; });
+
+
+//-------- append bars and their values -----------
+  bar.append("rect")
+      .attr("width", function(d) { return rankScale(d.rating); })
+      .attr("height", barHeight - 3) //adjust spacing b/w bars
+      .style("fill",function(d) { return mapScale(d.rating); });
+
+
+ /* bar.append("rect")
+      .attr("width", function(d) { return countScale(d.count); })
+      .attr("height", barHeight - 3) //adjust spacing b/w bars
+      .attr("transform",function(d) { return "translate("+rankScale(d.rank)+",0)";})
+      .style("fill",beanColor)
+      .style("opacity",function(d) { return d.count/20; }); */
+
+  //append name at end
+  bar.append("text")
+      .attr("x", function(d) { return rankScale(d.rating)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
+      .attr("y", barHeight / 2)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.country; });
+
+  //first bar text
+  bar.append("text")
+      .attr("x", 5)
+      .attr("y", barHeight / 2)
+      .attr("dy", ".35em")
+      .style("fill","white")
+      .style("font-size","13px")
+      .text(function(d) { return d.rating; });
+
+  //2nd bar text
+ /* bar.append("text")
+      .attr("x", function(d) { return countScale(d.count) +rankScale(d.rank) -15; })
+      .attr("y", barHeight / 2)
+      .attr("dy", ".35em")
+      .style("fill","white")
+      .text(function(d) { return d.count; }); */
+
+
+
+
 }
 
 </script>
+
+
 </body>
 </html>
