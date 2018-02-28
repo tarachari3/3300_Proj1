@@ -28,14 +28,30 @@ path.country { fill: #000; stroke: #ffffff; }
     stroke-width: 4;
 }
 
+a {
+    color: #0099ff;
+}
+
+a:hover {
+    color: #990000;
+}
+
 </style>
 </head>
 <body>
-<h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3>
+<!-- <h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3> -->
 
 <svg id="barPlot" height="1000" width="250" style="float:left"></svg> 
-<svg id="map" height="600" width="950" style="float:center"></svg>  <!-- 400 900 -->
+<svg id="map" height="750" width="950" style="float:center"></svg>  <!-- 400 900 -->
 
+<p>
+Experts judged these chocolate bars from unpleasant (1) to elite (5) using a variety of criteria such as
+flavor, texture, and aftermelt. We then took this data and matched the home country of the companies that 
+produced the chocolate to the average rating that each chocolate received from the experts. 
+</p>
+<p>
+<b>Source:</b> <a href="https://www.kaggle.com/rtatman/chocolate-bar-ratings">Kaggle's chocolate bar ratings dataset.</a>
+</p>
 <script>
 var mapData;
 var chocolateData;
@@ -49,7 +65,7 @@ var mapSvg = d3.select("#map");
 // used for drawing countries
 var paths;
 var countries; 
-var projection = d3.geoEquirectangular().scale(150);
+var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
 var sequentialColors = ['#0099ff', '#990000']; //[worst, best]
 var mapScale = d3.scaleLinear()
@@ -114,7 +130,22 @@ function displayMap() {
     })
     .attr("d", function (country) {
         return pathGenerator(country);
-    });
+    })
+    .attr("transform", "translate(0, 50)");
+
+    mapSvg.append("text")
+    .attr("text-anchor", "middle")
+    .attr("transform", "translate(500, 50)")
+    .attr("text-align", "center")
+    .attr("font-size", 40)
+    .attr("font-weight", "bold")
+    .text(function (t) { return "Who Produces the World's Best Chocolates?" });
+
+    mapSvg.append("text")
+    .attr("text-anchor", "middle")
+    .attr("transform", "translate(500, 80)")
+    .attr("font-size", 20)
+    .text(function (t) { return "A visualization of experts' ratings of 1,700 chocolate bars from 60 countries" });
 }
 
 function displayChocolate() {
