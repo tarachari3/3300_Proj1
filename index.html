@@ -10,7 +10,7 @@ path.country { fill: #ccc; stroke: #888;; }
 </style>
 </head>
 <body>
-<svg height="400" width="900"></svg> 
+<svg id="map" height="400" width="900"></svg> 
 <!-- change this to make it look nicer later -->
 <script>
 var mapData;
@@ -18,7 +18,7 @@ var chocolateData;
 var countryScores = {};
 var countryAverages = {};
 var averageValues = [];
-var svg = d3.select("svg");
+var mapSvg = d3.select("#map");
 
 // used for drawing countries
 var paths;
@@ -42,7 +42,7 @@ function callback(error, rawMap, rawChocolate) {
     chocolateData = rawChocolate;
     
     mapData = rawMap.features;
-    projection.fitExtent([[0,0], [svg.attr("width"), svg.attr("height")]], rawMap);
+    projection.fitExtent([[0,0], [mapSvg.attr("width"), mapSvg.attr("height")]], rawMap);
 
     // create countryScores: maps each country to array of scores
     for (i = 0; i < chocolateData.length; i++) {
@@ -73,7 +73,7 @@ function callback(error, rawMap, rawChocolate) {
 
 // display and color in map countries with scales
 function displayMap() {
-    paths = svg.selectAll("path.country")
+    paths = mapSvg.selectAll("path.country")
     .data(mapData);
 
     paths = paths.enter().append("path")
