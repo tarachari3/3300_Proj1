@@ -15,7 +15,7 @@ path.country { fill: #000; stroke: #ffffff; }
 }
 
 .stop-right {
-    stop-color: #990000;  /* maroon */
+    stop-color: #ff3300;  /* maroon */
 }
 
 .filled {
@@ -33,7 +33,7 @@ a {
 }
 
 a:hover {
-    color: #990000;
+    color: #ff3300;
 }
 
 </style>
@@ -67,7 +67,7 @@ var mapSvg = d3.select("#map");
 var paths;
 var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
-var sequentialColors = ['#0099ff', '#990000']; //[worst, best]
+var sequentialColors = ['#0099ff', '#ff3300']; //[worst, best]
 var mapScale = d3.scaleLinear()
 .domain([2.5,3.75]) //(min-.5,max)
 .range(sequentialColors);
