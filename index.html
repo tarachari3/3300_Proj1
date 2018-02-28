@@ -6,16 +6,18 @@
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 <style>
+path.country { fill: #ccc; stroke: #888;; }
 </style>
 </head>
 <body>
-<svg height="800" width="900"></svg> // change this to make it look nicer later
+<svg height="600" width="900"></svg> 
+<!-- change this to make it look nicer later -->
 <script>
 var mapData;
 var chocolateData;
 var svg = d3.select("svg");
 
-var projection = d3.geoEquirectangular().scale(75);
+var projection = d3.geoEquirectangular().scale(150);
 var pathGenerator = d3.geoPath().projection(projection);
 
 d3.queue()
@@ -29,16 +31,30 @@ function callback(error, rawMap, rawChocolate) {
     }
     chocolateData = rawChocolate;
     
-    mapData = rawMap.features.forEach(function (d, i) {
-        
-    });
+    mapData = rawMap.features;
+    projection.fitExtent([[0,0], [svg.attr("width"), svg.attr("height")]], rawMap);
 
     displayMap();
     displayChocolate();
 }
 
+var paths;
+var countries; 
 function displayMap() {
+    paths = svg.selectAll("path.country")
+    .data(mapData);
 
+
+    paths = paths.enter().append("path")
+    .attr("class", "country").merge(paths);
+
+    paths.attr("d", function (country) {
+        return pathGenerator(country);
+    });
+
+    mapData.forEach(element => {
+        
+    });
 }
 
 function displayChocolate() {
