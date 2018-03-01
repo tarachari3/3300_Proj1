@@ -4,6 +4,7 @@
 <link href="https://fonts.googleapis.com/css?family=Barlow+Condensed" rel="stylesheet">
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
 <script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-annotation/2.1.0/d3-annotation.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 <style>
 body { font-family: 'Barlow Condensed', Calibri, sans-serif; }
@@ -36,13 +37,21 @@ a:hover {
     color: #990000;
 }
 
+.annotation {
+    font-size: 10px;
+}
+
+.annotation path {
+    stroke-width: 1.5px;
+}
+
 </style>
 </head>
 <body>
 <!-- <h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3> -->
 
 <svg id="barPlot" height="1000" width="250" style="float:left"></svg> 
-<svg id="map" height="750" width="950" style="float:center"></svg>  <!-- 400 900 -->
+<svg id="map" height="750" width="950" style="float:center"></svg>
 
 <p>
 Experts judged these chocolate bars from unpleasant (1) to elite (5) using a variety of criteria such as
@@ -52,6 +61,7 @@ produced the chocolate to the average rating that each chocolate received from t
 <p>
 <b>Source:</b> <a href="https://www.kaggle.com/rtatman/chocolate-bar-ratings">Kaggle's chocolate bar ratings dataset.</a>
 </p>
+
 <script>
 var mapData;
 var chocolateData;
@@ -62,12 +72,11 @@ var countryPercentageAvgs = {}; // average percent cocoa by country
 var barSvg = d3.select("#barPlot");
 var mapSvg = d3.select("#map");
 
-
 // used for drawing countries
-var paths;
 var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
 var sequentialColors = ['#0099ff', '#990000']; //[worst, best]
+
 var mapScale = d3.scaleLinear()
 .domain([2.5,3.75]) //(min-.5,max)
 .range(sequentialColors);
@@ -118,7 +127,8 @@ function callback(error, rawMap, rawChocolate) {
 
 // display and color in map countries with scales
 function displayMap() {
-    paths = mapSvg.selectAll("path.country")
+    // MAP 1: Average rating to country
+    var paths = mapSvg.selectAll("path.country")
     .data(mapData);
 
     paths = paths.enter().append("path")
@@ -149,6 +159,55 @@ function displayMap() {
     .attr("transform", "translate(500, 80)")
     .attr("font-size", 20)
     .text(function (t) { return "A visualization of experts' ratings of 1,700 chocolate bars from 60 countries" });
+
+    // Annotations
+    var belgiumProjection = projection([4.46, 37.5]);
+    var italyProjection = projection([12.5, 26.87])
+    const annotations = [{
+        note: {
+            label: "Two Belgian chocolate companies, Callebaut and Cote d'Or, received a rating of 1.",
+            title: "Lowest Chocolate Ratings",
+            wrap: 75,
+            align: "left",
+        },
+        x: belgiumProjection[0], // Belgium coordinates
+        y: belgiumProjection[1],
+        dx: -150,
+        dy: 30,
+        type: d3.annotationCalloutCircle,
+        subject: {
+            radius: 10,
+        }
+    }, {
+        note: {
+            label: "Amedei, an Italian chocolate company, received two elite ratings for their Chuao and Toscano Black chocolate bars.",
+            title: "Highest Chocolate Ratings",
+            wrap: 90,
+            align: "left"
+        },
+        x: italyProjection[0], // Belgium coordinates
+        y: italyProjection[1],
+        dx: 130,
+        dy: 120,
+        type: d3.annotationCalloutCircle,
+        subject: {
+            radius: 15,
+        }
+    }]
+    .map(function (d) { d.color = "#990000"; return d; });
+
+    d3.annotation().annotations(annotations);
+
+
+    const makeAnnotations = d3.annotation()
+    .type(d3.annotationCalloutCircle)
+    .annotations(annotations);
+
+    mapSvg
+    .append("g")
+    .attr("class", "annotation-group")
+    .call(makeAnnotations);
+
 }
 
 function displayChocolate() {
