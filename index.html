@@ -16,7 +16,7 @@ path.country { fill: #000; stroke: #ffffff; }
 }
 
 .stop-right {
-    stop-color: #990000;  /* maroon */
+    stop-color: #ff3300;  /* maroon */
 }
 
 .filled {
@@ -34,7 +34,7 @@ a {
 }
 
 a:hover {
-    color: #990000;
+    color: #ff3300;
 }
 
 .annotation {
@@ -50,8 +50,8 @@ a:hover {
 <body>
 <!-- <h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3> -->
 
-<svg id="barPlot" height="1000" width="250" style="float:left"></svg> 
-<svg id="map" height="750" width="950" style="float:center"></svg>
+<svg id="barPlot" height="1000" width="350" style="float:left"></svg> 
+<svg id="map" height="750" width="850" style="float:center"></svg>  <!-- 400 900 -->
 
 <p>
 Experts judged these chocolate bars from unpleasant (1) to elite (5) using a variety of criteria such as
@@ -59,7 +59,10 @@ flavor, texture, and aftermelt. We then took this data and matched the home coun
 produced the chocolate to the average rating that each chocolate received from the experts. 
 </p>
 <p>
-<b>Source:</b> <a href="https://www.kaggle.com/rtatman/chocolate-bar-ratings">Kaggle's chocolate bar ratings dataset.</a>
+<b>Sources:</b> <br>
+<a href="https://www.kaggle.com/rtatman/chocolate-bar-ratings">Kaggle's chocolate bar ratings dataset.</a>
+<br>
+<a href="http://www.worldstopexports.com/chocolate-exporters/">Global Chocolate Production data.</a>
 </p>
 
 <script>
@@ -69,14 +72,16 @@ var countryScores = {};
 var countryAverages = {};
 var countryPercentages = {}; // total percent cocoa by country
 var countryPercentageAvgs = {}; // average percent cocoa by country
+var rankData = [];
+var saleDataArr = {};
+var salesData;
 var barSvg = d3.select("#barPlot");
 var mapSvg = d3.select("#map");
 
 // used for drawing countries
 var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
-var sequentialColors = ['#0099ff', '#990000']; //[worst, best]
-
+var sequentialColors = ['#0099ff', '#ff3300']; //[worst, best]
 var mapScale = d3.scaleLinear()
 .domain([2.5,3.75]) //(min-.5,max)
 .range(sequentialColors);
@@ -84,14 +89,15 @@ var mapScale = d3.scaleLinear()
 d3.queue()
 .defer(d3.json, "countries.geo.json")
 .defer(d3.csv, "flavors_of_cacao.csv")
+.defer(d3.csv, "chocSales.csv")
 .await(callback);
 
-function callback(error, rawMap, rawChocolate) {
+function callback(error, rawMap, rawChocolate ,rawSales) {
     if (error) {
         console.log(error);
     }
     chocolateData = rawChocolate;
-    
+    salesData = rawSales;
     mapData = rawMap.features;
     projection.fitExtent([[0,0], [mapSvg.attr("width"), mapSvg.attr("height")]], rawMap);
 
@@ -212,155 +218,171 @@ function displayMap() {
 
 function displayChocolate() {
 
-/* var svgBar = d3.select("body").append("svg")
-.attr("width", 300)
-.attr("height", 800)
-.style("border","none"); */
 
-  var barHeight = 15;
+	var barHeight = 15;
 
-  var legendW = 100;
-  var legendH = 20;
+	var legendW = 175;
+	var legendH = 20;
 
-  var rateColor = "#2A7F31";
-  var beanColor = "#819fae";
+	var rateColor = "#2A7F31";
+	var beanColor = "#819fae";
 
 
-  var rankData = [];
+
     //console.log(data); 
+    var exporter = "";
+    //sales data
+	for (i = 0; i < salesData.length; i++) {
+		var exporter = salesData[i]["Exporter"];    
+		saleDataArr[exporter] = parseFloat(salesData[i][" Percent_Total"]);
+	}
+
+	salesColor = "#bfbfbf";
 
    // get rankData from countryAverages
-   var count = 0;
-  for(var key in countryAverages){
-      rankData.push({rating:countryAverages[key],country:key});
 
-  }
+	for(var key in countryAverages){
+		if(key in saleDataArr){
+			rankData.push({rating:countryAverages[key],country:key,salesPerc:saleDataArr[key]});
+		}else{
+			rankData.push({rating:countryAverages[key],country:key,salesPerc:0});
+		}  
 
-  rankData.sort(function(a, b) {
-    return b.rating - a.rating;
-  });
+	}
 
-//rankData = rankData.slice(0,50);
-
-  var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
-  rankScale = d3.scaleLinear()
-  .domain(rankExtent)
-  .range([30, 170]);
-
-  /* var countExtent = d3.extent(rankData, function (d) { return d.count; });
-  countScale = d3.scaleLinear()
-  .domain(countExtent)
-  .range([30, 120]); */
+	rankData.sort(function(a, b) {
+	return b.rating - a.rating;
+	});
 
  
 
-  //------- legend ---------
-    //color scale
-  var defs = barSvg.append("defs");
-  var mainGradient = defs.append('linearGradient')
-  .attr('id', 'mainGradient');
 
-  //create stops for colors
-  mainGradient.append('stop')
-  .attr('class', 'stop-left')
-  .attr('offset', '0');
+//rankData = rankData.slice(0,50);
 
-  mainGradient.append('stop')
-  .attr('class', 'stop-right')
-  .attr('offset', '1');
+	var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
+	rankScale = d3.scaleLinear()
+	.domain(rankExtent)
+	.range([30, 170]);
+
+	var saleExtent = d3.extent(rankData, function (d) { return d.salesPerc; });
+	saleScale = d3.scaleLinear()
+	.domain(saleExtent)
+	.range([30, 170]); 
 
 
-  //rating
- barSvg.append("rect")
-  .classed('filled', true)
-  .attr("width", legendW)
-  .attr("height", legendH) //adjust spacing b/w bars
-  .attr("x", 20)
-  .attr("y", 20);
 
-  barSvg.append("text")
-  .attr("x", 20+legendW+4 )
-  .attr("y", 20+legendH/2)
-  .attr("dy", ".35em")
-  .style("font-size","16px")
-  .text("5 POINT RATING");
+	//------- legend ---------
+	//color scale
+	var defs = barSvg.append("defs");
+	var mainGradient = defs.append('linearGradient')
+	.attr('id', 'mainGradient');
 
-  barSvg.append("text")
-  .attr("x", 20-10 )
-  .attr("y", legendH/2)
-  .attr("dy", ".35em")
-  .style("font-size","16px")
-  .text("Worst");
+	//create stops for colors
+	mainGradient.append('stop')
+	.attr('class', 'stop-left')
+	.attr('offset', '0');
 
-  barSvg.append("text")
-  .attr("x", legendW+4)
-  .attr("y", legendH/2)
-  .attr("dy", ".35em")
-  .style("font-size","16px")
-  .text("Best");
-  //-----------------------------
+	mainGradient.append('stop')
+	.attr('class', 'stop-right')
+	.attr('offset', '1');
 
 
-    //bean count
-   /* svgBar.append("rect")
-    .attr("width", legendW)
-    .attr("height", legendH) //adjust spacing b/w bars
-    .attr("x", 10*legendW)
-    .attr("y", 0)
-    .style("fill",beanColor);
+	//rating
+	//gradient bar
+	barSvg.append("rect")
+	.classed('filled', true)
+	.attr("width", legendW)
+	.attr("height", legendH) //adjust spacing b/w bars
+	.attr("x", 0)
+	.attr("y", 20);
 
-    svgBar.append("text")
-    .attr("x", 10*legendW+legendW+2)
-    .attr("y", legendH/2)
-    .attr("dy", ".35em")
-    .style("font-size","12px")
-    .text("Bean-blend Types Produced"); */
+	//production % bar
+	barSvg.append("rect")
+	.attr("width", legendW)
+	.attr("height", legendH)
+	.attr("x", legendW)
+	.attr("y", 20)
+	.style("fill","#ff3300")
+	.style("opacity",0.6);
 
-  //make sure all bars begin at different y
-  var bar = barSvg.selectAll("g")
-      .data(rankData)
-    .enter().append("g")
-      .attr("transform", function(d, i) { return "translate(0," + (i+3) * barHeight + ")"; });
+	barSvg.append("text")
+	.attr("x", legendW/2-40 )
+	.attr("y", legendH/2)
+	.attr("dy", ".35em")
+	.style("font-size","15px")
+	.text("5 Point Rating");
+
+	barSvg.append("text")
+	.attr("x", 0 )
+	.attr("y", legendH+27)
+	.attr("dy", ".35em")
+	.style("font-size","13px")
+	.text("Worst");
+
+	barSvg.append("text")
+	.attr("x", legendW-25)
+	.attr("y", legendH+27)
+	.attr("dy", ".35em")
+	.style("font-size","13px")
+	.text("Best");
+
+	barSvg.append("text")
+	.attr("x", legendW )
+	.attr("y", legendH/2)
+	.attr("dy", ".35em")
+	.style("font-size","15px")
+	.text("% of Global Chocolate Production");
 
 
-//-------- append bars and their values -----------
-  bar.append("rect")
-      .attr("width", function(d) { return rankScale(d.rating); })
-      .attr("height", barHeight - 3) //adjust spacing b/w bars
-      .style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); });
+	//-----------------------------
 
 
- /* bar.append("rect")
-      .attr("width", function(d) { return countScale(d.count); })
-      .attr("height", barHeight - 3) //adjust spacing b/w bars
-      .attr("transform",function(d) { return "translate("+rankScale(d.rank)+",0)";})
-      .style("fill",beanColor)
-      .style("opacity",function(d) { return d.count/20; }); */
+	//make sure all bars begin at different y
+	var bar = barSvg.selectAll("g")
+	.data(rankData)
+	.enter().append("g")
+	.attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
 
-  //append name at end
-  bar.append("text")
-      .attr("x", function(d) { return rankScale(d.rating)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
-      .attr("y", barHeight / 2)
-      .attr("dy", ".35em")
-      .style("font-size","14px")
-      .text(function(d) { return d.country; });
 
-  //first bar rating text
-  bar.append("text")
-      .attr("x", 5)
-      .attr("y", barHeight / 2)
-      .attr("dy", ".35em")
-      .style("fill","white")
-      .style("font-size","13px")
-      .text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
+	//-------- append bars and their values -----------
+	bar.append("rect")
+	.attr("width", function(d) { return rankScale(d.rating); })
+	.attr("height", barHeight - 3) //adjust spacing b/w bars
+	.style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); });
 
-  //2nd bar text
- /* bar.append("text")
-      .attr("x", function(d) { return countScale(d.count) +rankScale(d.rank) -15; })
-      .attr("y", barHeight / 2)
-      .attr("dy", ".35em")
-      .style("fill","white")
-      .text(function(d) { return d.count; }); */
+	//sales bars
+	bar.append("rect")
+	.attr("width", function(d) { return saleScale(d.salesPerc); })
+	.attr("height", barHeight - 3) //adjust spacing b/w bars
+	.attr("transform",function(d) { return "translate("+rankScale(d.rating)+",0)";})
+	.style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); })
+	.style("opacity",0.6); 
+
+	//append name at end
+	bar.append("text")
+	.attr("x", function(d) { return rankScale(d.rating)+saleScale(d.salesPerc)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
+	.attr("y", barHeight / 2)
+	.attr("dy", ".35em")
+	.style("font-size","14px")
+	.text(function(d) { return d.country; });
+
+	//first bar rating text
+	bar.append("text")
+	.attr("x", 5)
+	.attr("y", barHeight / 2)
+	.attr("dy", ".35em")
+	.style("fill","white")
+	.style("font-size","13px")
+	.text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
+
+	//2nd bar text, sales %
+	bar.append("text")
+	.attr("x", function(d) { return rankScale(d.rating)+saleScale(d.salesPerc)-28; })
+	.attr("y", barHeight/2 - 1)
+	.attr("dy", ".35em")
+	.style("fill","white")
+	.style("font-size","13px")
+	.text(function(d) { return d.salesPerc+"%"; }); 
 
 
 
