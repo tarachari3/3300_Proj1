@@ -50,7 +50,10 @@ flavor, texture, and aftermelt. We then took this data and matched the home coun
 produced the chocolate to the average rating that each chocolate received from the experts. 
 </p>
 <p>
-<b>Source:</b> <a href="https://www.kaggle.com/rtatman/chocolate-bar-ratings">Kaggle's chocolate bar ratings dataset.</a>
+<b>Sources:</b> <br>
+<a href="https://www.kaggle.com/rtatman/chocolate-bar-ratings">Kaggle's chocolate bar ratings dataset.</a>
+<br>
+<a href="http://www.worldstopexports.com/chocolate-exporters/">Global Chocolate Production data.</a>
 </p>
 <script>
 var mapData;
@@ -157,14 +160,10 @@ function displayMap() {
 
 function displayChocolate() {
 
-/* var svgBar = d3.select("body").append("svg")
-.attr("width", 300)
-.attr("height", 800)
-.style("border","none"); */
 
 	var barHeight = 15;
 
-	var legendW = 100;
+	var legendW = 175;
 	var legendH = 20;
 
 	var rateColor = "#2A7F31";
@@ -231,6 +230,7 @@ function displayChocolate() {
 
 
 	//rating
+	//gradient bar
 	barSvg.append("rect")
 	.classed('filled', true)
 	.attr("width", legendW)
@@ -238,49 +238,52 @@ function displayChocolate() {
 	.attr("x", 0)
 	.attr("y", 20);
 
+	//production % bar
+	barSvg.append("rect")
+	.attr("width", legendW)
+	.attr("height", legendH)
+	.attr("x", legendW)
+	.attr("y", 20)
+	.style("fill","#ff3300")
+	.style("opacity",0.6);
+
 	barSvg.append("text")
-	.attr("x", 5+legendW )
-	.attr("y", 20+legendH/2)
+	.attr("x", legendW/2-40 )
+	.attr("y", legendH/2)
 	.attr("dy", ".35em")
-	.style("font-size","16px")
-	.text("5 POINT RATING");
+	.style("font-size","15px")
+	.text("5 Point Rating");
 
 	barSvg.append("text")
 	.attr("x", 0 )
-	.attr("y", legendH/2)
+	.attr("y", legendH+27)
 	.attr("dy", ".35em")
-	.style("font-size","16px")
+	.style("font-size","13px")
 	.text("Worst");
 
 	barSvg.append("text")
 	.attr("x", legendW-25)
+	.attr("y", legendH+27)
+	.attr("dy", ".35em")
+	.style("font-size","13px")
+	.text("Best");
+
+	barSvg.append("text")
+	.attr("x", legendW )
 	.attr("y", legendH/2)
 	.attr("dy", ".35em")
-	.style("font-size","16px")
-	.text("Best");
+	.style("font-size","15px")
+	.text("% of Global Chocolate Production");
+
+
 	//-----------------------------
 
-
-	    //bean count
-	/* barSvg.append("rect")
-	.attr("width", legendW)
-	.attr("height", legendH) //adjust spacing b/w bars
-	.attr("x", 10*legendW)
-	.attr("y", 0)
-	.style("fill",beanColor);
-
-	svgBar.append("text")
-	.attr("x", 10*legendW+legendW+2)
-	.attr("y", legendH/2)
-	.attr("dy", ".35em")
-	.style("font-size","12px")
-	.text("Bean-blend Types Produced"); */
 
 	//make sure all bars begin at different y
 	var bar = barSvg.selectAll("g")
 	.data(rankData)
 	.enter().append("g")
-	.attr("transform", function(d, i) { return "translate(0," + (i+3) * barHeight + ")"; });
+	.attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
 
 
 	//-------- append bars and their values -----------
