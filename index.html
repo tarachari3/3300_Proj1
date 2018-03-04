@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>INFO 3300 - Data-driven Web Applications</title>
+<title>Who Produces the World's Best Chocolate?</title>
 <link href="https://fonts.googleapis.com/css?family=Barlow+Condensed" rel="stylesheet">
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
 <script src="https://d3js.org/d3.v4.min.js"></script>
@@ -12,11 +12,11 @@ path.country { fill: #E5E7E9; stroke: #ffffff; }
 
 /* Gradient styling*/
 .stop-left {
-    stop-color:  #0066cc; /* #ff9999;   worst */
+    stop-color:  #fff45b; /* #ff9999;   worst */
 }
 
 .stop-right {
-    stop-color: #ff9999; /* #000066;  /* best */ 
+    stop-color: #ff4216; /* #000066;  /* best */ 
 }
 
 .filled {
@@ -51,7 +51,7 @@ a:hover {
 <!-- <h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3> -->
 
 <svg id="barPlot" height="1000" width="350" style="float:left"></svg> 
-<svg id="map" height="750" width="850" style="float:center"></svg>  <!-- 400 900 -->
+<svg id="map" height="750" width="900" style="float:center"></svg>  <!-- 400 900 -->
 
 <p>
 Experts judged these chocolate bars from unpleasant (1) to elite (5) using a variety of criteria such as
@@ -81,7 +81,7 @@ var mapSvg = d3.select("#map");
 // used for drawing countries
 var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
-var sequentialColors = ['#0066cc', '#ff9999']; //[worst, best]
+var sequentialColors = [ '#fff45b', '#ff6b49', '#ff4216']; //[worst, best]
 var mapScale = d3.scaleLinear()
 .domain([2.5,3.75]) //(min-.5,max)
 .range(sequentialColors);
@@ -197,10 +197,10 @@ function displayMap() {
         dy: 120,
         type: d3.annotationCalloutCircle,
         subject: {
-            radius: 15,
+            radius: 20,
         }
     }]
-    .map(function (d) { d.color = "#990000"; return d; });
+    .map(function (d) { d.color = "black"; return d; });
 
     d3.annotation().annotations(annotations);
 
@@ -371,7 +371,7 @@ function displayChocolate() {
 	.attr("x", 5)
 	.attr("y", barHeight / 2)
 	.attr("dy", ".35em")
-	.style("fill","white")
+	.style("fill","black")
 	.style("font-size","13px")
 	.text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
 
@@ -380,7 +380,7 @@ function displayChocolate() {
 	.attr("x", function(d) { return rankScale(d.rating)+saleScale(d.salesPerc)-28; })
 	.attr("y", barHeight/2 - 1)
 	.attr("dy", ".35em")
-	.style("fill","white")
+	.style("fill","black")
 	.style("font-size","13px")
 	.text(function(d) { return d.salesPerc+"%"; }); 
 
