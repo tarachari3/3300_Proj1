@@ -8,15 +8,15 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
 <style>
 body { font-family: 'Barlow Condensed', Calibri, sans-serif; }
-path.country { fill: #000; stroke: #ffffff; }
+path.country { fill: #E5E7E9; stroke: #ffffff; }
 
 /* Gradient styling*/
 .stop-left {
-    stop-color: #0099ff;  /* blue */
+    stop-color:  #0066cc; /* #ff9999;   worst */
 }
 
 .stop-right {
-    stop-color: #ff3300;  /* maroon */
+    stop-color: #ff9999; /* #000066;  /* best */ 
 }
 
 .filled {
@@ -30,11 +30,11 @@ path.country { fill: #000; stroke: #ffffff; }
 }
 
 a {
-    color: #0099ff;
+    color: #0066cc;
 }
 
 a:hover {
-    color: #ff3300;
+    color: #ff9999;
 }
 
 .annotation {
@@ -81,7 +81,7 @@ var mapSvg = d3.select("#map");
 // used for drawing countries
 var projection = d3.geoMercator().scale(125);
 var pathGenerator = d3.geoPath().projection(projection);
-var sequentialColors = ['#0099ff', '#ff3300']; //[worst, best]
+var sequentialColors = ['#0066cc', '#ff9999']; //[worst, best]
 var mapScale = d3.scaleLinear()
 .domain([2.5,3.75]) //(min-.5,max)
 .range(sequentialColors);
@@ -302,7 +302,7 @@ function displayChocolate() {
 	.attr("height", legendH)
 	.attr("x", legendW)
 	.attr("y", 20)
-	.style("fill","#ff3300")
+	.style("fill","#ff9999")
 	.style("opacity",0.6);
 
 	barSvg.append("text")
