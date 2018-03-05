@@ -10,22 +10,22 @@
 body { font-family: 'Barlow Condensed', Calibri, sans-serif; }
 path.country { fill: #E5E7E9; stroke: #ffffff; }
 
-/* Gradient styling*/
+/* Gradient styling, using d3 linearGradient, adapted from http://bl.ocks.org/pnavarrc/20950640812489f13246 */
 .stop-left {
-    stop-color:  #fff45b; /* #ff9999;   worst */
+    stop-color:  #fff45b; /* worst */
 }
 
 .stop-right {
-    stop-color: #ff4216; /* #000066;  /* best */ 
+    stop-color: #ff4216; /* best */ 
 }
 
 .filled {
-    fill: url(#mainGradient);
+    fill: url(#mapGradient);
 }
 
 .outlined {
     fill:   none;
-    stroke: url(#mainGradient);
+    stroke: url(#mapGradient);
     stroke-width: 4;
 }
 
@@ -51,7 +51,7 @@ a:hover {
 <!-- <h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3> -->
 
 <svg id="barPlot" height="1000" width="200" style="float:left"></svg> 
-<svg id="map" height="750" width="810" style="float:center"></svg>  <!-- 400 900 -->
+<svg id="map" height="750" width="810" style="float:center"></svg>  
 <svg id="barPlotPerc" height="1000" width="200" style="float:right"></svg> 
 
 <p>
@@ -220,190 +220,174 @@ function displayMap() {
 
 function displayChocolate() {
 
-	var barHeight = 15;
+    var barHeight = 15;
+    var legendW = 175;
+    var legendH = 20;
+    var plotW = 200; //width of barplot Plots
+    var barFill = "#99CC99"; //only bar fill for % production barPlot
 
-	var legendW = 175;
-	var legendH = 20;
-
-	var plotW = 200;
-
-
-    //console.log(data); 
+    /* Save country/exporter and its production percentage */
     var exporter = "";
-    //sales data
-	for (i = 0; i < salesData.length; i++) {
-		var exporter = salesData[i]["Exporter"];    
-		saleDataArr[exporter] = parseFloat(salesData[i][" Percent_Total"]);
-	}
+    for (i = 0; i < salesData.length; i++) {
+    	var exporter = salesData[i]["Exporter"];    
+    	saleDataArr[exporter] = parseFloat(salesData[i][" Percent_Total"]);
+    }
 
 
-   // get rankData from countryAverages
+   /* Make object array with rating, country name,sales percent  */
+    for(var key in countryAverages){
+    	if(key in saleDataArr){
+    		rankData.push({rating:countryAverages[key],country:key,salesPerc:saleDataArr[key]});
+    	}else{
+    		rankData.push({rating:countryAverages[key],country:key,salesPerc:0});
+    	}  
 
-	for(var key in countryAverages){
-		if(key in saleDataArr){
-			rankData.push({rating:countryAverages[key],country:key,salesPerc:saleDataArr[key]});
-		}else{
-			rankData.push({rating:countryAverages[key],country:key,salesPerc:0});
-		}  
+    }
 
-	}
-
-	rankData.sort(function(a, b) {
+    //sort data from highest rank to lowest
+    rankData.sort(function(a, b) {
 	return b.rating - a.rating;
-	});
-
- 
+    });
 
 
-//rankData = rankData.slice(0,50);
+    //map ratings to coords
+    var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
+    rankScale = d3.scaleLinear()
+    .domain(rankExtent)
+    .range([20, 120]);
 
-	var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
-	rankScale = d3.scaleLinear()
-	.domain(rankExtent)
-	.range([20, 120]);
-
-	var saleExtent = d3.extent(rankData, function (d) { return d.salesPerc; });
-	saleScale = d3.scaleLinear()
-	.domain(saleExtent)
-	.range([45, 140]); 
+    //map sale %'s to coords
+    var saleExtent = d3.extent(rankData, function (d) { return d.salesPerc; });
+    saleScale = d3.scaleLinear()
+    .domain(saleExtent)
+    .range([45, 140]); 
 
 
 
-	//------- legend ---------
-	//color scale
-	var defs = barSvg.append("defs");
-	var mainGradient = defs.append('linearGradient')
-	.attr('id', 'mainGradient');
+ //------- rating legend ---------
+    //color scale
+    var defs = barSvg.append("defs");
+    var mapGradient = defs.append('linearGradient')
+    .attr('id', 'mapGradient');
 
-	//create stops for colors
-	mainGradient.append('stop')
-	.attr('class', 'stop-left')
-	.attr('offset', '0');
+    //create stops for colors
+    mapGradient.append('stop')
+    .attr('class', 'stop-left')
+    .attr('offset', '0');
 
-	mainGradient.append('stop')
-	.attr('class', 'stop-right')
-	.attr('offset', '1');
+    mapGradient.append('stop')
+    .attr('class', 'stop-right')
+    .attr('offset', '1');
 
+    //gradient bar
+    barSvg.append("rect")
+    .classed('filled', true)
+    .attr("width", legendW)
+    .attr("height", legendH) //adjust spacing b/w bars
+    .attr("x", 0)
+    .attr("y", 20);
 
-	//rating
-	//gradient bar
-	barSvg.append("rect")
-	.classed('filled', true)
-	.attr("width", legendW)
-	.attr("height", legendH) //adjust spacing b/w bars
-	.attr("x", 0)
-	.attr("y", 20);
+    barSvg.append("text")
+    .attr("text-anchor", "middle")
+    .attr("x", legendW/2 )
+    .attr("y", legendH/2)
+    .attr("dy", ".35em")
+    .style("font-size","15px")
+    .text("5 Point Average Rating");
 
-	barSvg.append("text")
-	.attr("text-anchor", "middle")
-	.attr("x", legendW/2 )
-	.attr("y", legendH/2)
-	.attr("dy", ".35em")
-	.style("font-size","15px")
-	.text("5 Point Average Rating");
+    barSvg.append("text")
+    .attr("x", 0 )
+    .attr("y", legendH+27)
+    .attr("dy", ".35em")
+    .style("font-size","13px")
+    .text("Worst");
 
-	barSvg.append("text")
-	.attr("x", 0 )
-	.attr("y", legendH+27)
-	.attr("dy", ".35em")
-	.style("font-size","13px")
-	.text("Worst");
-
-	barSvg.append("text")
-	.attr("x", legendW-25)
-	.attr("y", legendH+27)
-	.attr("dy", ".35em")
-	.style("font-size","13px")
-	.text("Best");
+    barSvg.append("text")
+    .attr("x", legendW-25)
+    .attr("y", legendH+27)
+    .attr("dy", ".35em")
+    .style("font-size","13px")
+    .text("Best");
 
 
-	//-----------------------------
+//--------- plot rating bar plot -----------
 
 
-	//make sure all bars begin at different y
-	var bar = barSvg.selectAll("g")
-	.data(rankData)
-	.enter().append("g")
-	.attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
+    //make sure all bars begin at different y
+    var bar = barSvg.selectAll("g")
+    .data(rankData)
+    .enter().append("g")
+    .attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
 
 
-	//-------- append bars and their values -----------
-	bar.append("rect")
-	.attr("width", function(d) { return rankScale(d.rating); })
-	.attr("height", barHeight - 3) //adjust spacing b/w bars
-	.style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); });
+    //-------- append bars and their values -----------
+    bar.append("rect")
+    .attr("width", function(d) { return rankScale(d.rating); })
+    .attr("height", barHeight - 3) //adjust spacing b/w bars
+    .style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); });
 
+    //append name at end
+    bar.append("text")
+    .attr("x", function(d) { return rankScale(d.rating)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
+    .attr("y", barHeight / 2)
+    .attr("dy", ".35em")
+    .style("font-size","14px")
+    .text(function(d) { return d.country; });
 
-
-	//append name at end
-	bar.append("text")
-	.attr("x", function(d) { return rankScale(d.rating)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
-	.attr("y", barHeight / 2)
-	.attr("dy", ".35em")
-	.style("font-size","14px")
-	.text(function(d) { return d.country; });
-
-	//first bar rating text
-	bar.append("text")
-	.attr("x", 3)
-	.attr("y", barHeight / 2)
-	.attr("dy", ".35em")
-	.style("font-size","13px")
-	.text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
+    //rating text
+    bar.append("text")
+    .attr("x", 3)
+    .attr("y", barHeight / 2)
+    .attr("dy", ".35em")
+    .style("font-size","13px")
+    .text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
 
 	
-	//-------------- PERCENT BARPLOT -------------
-	
-	var barFill = "#99CC99";
-	//production % bar
-	barSvgPerc.append("rect")
-	.attr("width", legendH)
-	.attr("height", legendH)
-	.attr("y", 20)
-	.style("fill",barFill);
+   //-------------- PERCENT BARPLOT -------------
+    // ----- production % bar legend ------
+    barSvgPerc.append("rect")
+    .attr("width", legendH)
+    .attr("height", legendH)
+    .attr("y", 20)
+    .style("fill",barFill);
 
-	barSvgPerc.append("text")
-	.attr("x", legendH+5)
-	.attr("y", legendH+10)
-	.attr("dy", ".35em")
-	.style("font-size","15px")
-	.text("% of Global Chocolate Production"); 
+    barSvgPerc.append("text")
+    .attr("x", legendH+5)
+    .attr("y", legendH+10)
+    .attr("dy", ".35em")
+    .style("font-size","15px")
+    .text("% of Global Chocolate Production"); 
 
-	//make sure all bars begin at different y
-	var barPerc = barSvgPerc.selectAll("g")
-	.data(rankData)
-	.enter().append("g")
-	.attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
+    //make sure all bars begin at different y
+    var barPerc = barSvgPerc.selectAll("g")
+    .data(rankData)
+    .enter().append("g")
+    .attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
 
 
-	//-------- append bars and their values -----------
+   //-------- append bars and their values -----------
+    //sales bars
+    barPerc.append("rect")
+    .attr("width", function(d) { return saleScale(d.salesPerc); })
+    .attr("height", barHeight - 3) //adjust spacing b/w bars
+    .style("fill",barFill); 
+
+    //append name at end
+    barPerc.append("text")
+    .attr("x", function(d) {return saleScale(d.salesPerc)+15 ;})
+    .attr("y", barHeight / 2)
+    .attr("dy", ".35em")
+    .style("font-size","14px")
+    .text(function(d) { return d.country; });
 
 
-	//sales bars
-	barPerc.append("rect")
-	.attr("width", function(d) { return saleScale(d.salesPerc); })
-	.attr("height", barHeight - 3) //adjust spacing b/w bars
-	//.attr("x",function(d) { return saleScale(d.salesPerc); })
-	.style("fill",barFill); 
-
-	//append name at end
-	barPerc.append("text")
-	.attr("x", function(d) {return saleScale(d.salesPerc)+15 ;}) //return countScale(d.count)+rankScale(d.rank)+15;
-	//.attr("text-anchor", "end")
-	//.attr("x", function(d) { return plotW - saleScale(d.salesPerc)-15; })
-	.attr("y", barHeight / 2)
-	.attr("dy", ".35em")
-	.style("font-size","14px")
-	.text(function(d) { return d.country; });
-
-
-	//2nd bar text, sales %
-	barPerc.append("text")
-	.attr("x", 3)
-	.attr("y", barHeight/2 - 1)
-	.attr("dy", ".35em")
-	.style("font-size","13px")
-	.text(function(d) { return d.salesPerc+"%"; }); 
+    //bar text, sales %
+    barPerc.append("text")
+    .attr("x", 3)
+    .attr("y", barHeight/2 - 1)
+    .attr("dy", ".35em")
+    .style("font-size","13px")
+    .text(function(d) { return d.salesPerc+"%"; }); 
 
 
 }
