@@ -50,8 +50,9 @@ a:hover {
 <body>
 <!-- <h3 align="center" style="margin-bottom:0px;margin-top:10px; font-size:40px">Who Produces the World's Best Chocolates?</h3> -->
 
-<svg id="barPlot" height="1000" width="350" style="float:left"></svg> 
-<svg id="map" height="750" width="900" style="float:center"></svg>  <!-- 400 900 -->
+<svg id="barPlot" height="1000" width="200" style="float:left"></svg> 
+<svg id="map" height="750" width="810" style="float:center"></svg>  <!-- 400 900 -->
+<svg id="barPlotPerc" height="1000" width="200" style="float:right"></svg> 
 
 <p>
 Experts judged these chocolate bars from unpleasant (1) to elite (5) using a variety of criteria such as
@@ -77,6 +78,7 @@ var saleDataArr = {};
 var salesData;
 var barSvg = d3.select("#barPlot");
 var mapSvg = d3.select("#map");
+var barSvgPerc = d3.select("#barPlotPerc");
 
 // used for drawing countries
 var projection = d3.geoMercator().scale(125);
@@ -154,7 +156,7 @@ function displayMap() {
 
     mapSvg.append("text")
     .attr("text-anchor", "middle")
-    .attr("transform", "translate(500, 50)")
+    .attr("transform", "translate(450, 50)")
     .attr("text-align", "center")
     .attr("font-size", 40)
     .attr("font-weight", "bold")
@@ -162,7 +164,7 @@ function displayMap() {
 
     mapSvg.append("text")
     .attr("text-anchor", "middle")
-    .attr("transform", "translate(500, 80)")
+    .attr("transform", "translate(450, 80)")
     .attr("font-size", 20)
     .text(function (t) { return "A visualization of experts' ratings of 1,700 chocolate bars from 60 countries" });
 
@@ -218,15 +220,12 @@ function displayMap() {
 
 function displayChocolate() {
 
-
 	var barHeight = 15;
 
 	var legendW = 175;
 	var legendH = 20;
 
-	var rateColor = "#2A7F31";
-	var beanColor = "#819fae";
-
+	var plotW = 200;
 
 
     //console.log(data); 
@@ -237,7 +236,6 @@ function displayChocolate() {
 		saleDataArr[exporter] = parseFloat(salesData[i][" Percent_Total"]);
 	}
 
-	salesColor = "#bfbfbf";
 
    // get rankData from countryAverages
 
@@ -262,12 +260,12 @@ function displayChocolate() {
 	var rankExtent = d3.extent(rankData, function (d) { return d.rating; });
 	rankScale = d3.scaleLinear()
 	.domain(rankExtent)
-	.range([30, 170]);
+	.range([20, 120]);
 
 	var saleExtent = d3.extent(rankData, function (d) { return d.salesPerc; });
 	saleScale = d3.scaleLinear()
 	.domain(saleExtent)
-	.range([30, 170]); 
+	.range([45, 140]); 
 
 
 
@@ -296,21 +294,13 @@ function displayChocolate() {
 	.attr("x", 0)
 	.attr("y", 20);
 
-	//production % bar
-	barSvg.append("rect")
-	.attr("width", legendW)
-	.attr("height", legendH)
-	.attr("x", legendW)
-	.attr("y", 20)
-	.style("fill","#ff9999")
-	.style("opacity",0.6);
-
 	barSvg.append("text")
-	.attr("x", legendW/2-40 )
+	.attr("text-anchor", "middle")
+	.attr("x", legendW/2 )
 	.attr("y", legendH/2)
 	.attr("dy", ".35em")
 	.style("font-size","15px")
-	.text("5 Point Rating");
+	.text("5 Point Average Rating");
 
 	barSvg.append("text")
 	.attr("x", 0 )
@@ -325,13 +315,6 @@ function displayChocolate() {
 	.attr("dy", ".35em")
 	.style("font-size","13px")
 	.text("Best");
-
-	barSvg.append("text")
-	.attr("x", legendW )
-	.attr("y", legendH/2)
-	.attr("dy", ".35em")
-	.style("font-size","15px")
-	.text("% of Global Chocolate Production");
 
 
 	//-----------------------------
@@ -350,17 +333,11 @@ function displayChocolate() {
 	.attr("height", barHeight - 3) //adjust spacing b/w bars
 	.style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); });
 
-	//sales bars
-	bar.append("rect")
-	.attr("width", function(d) { return saleScale(d.salesPerc); })
-	.attr("height", barHeight - 3) //adjust spacing b/w bars
-	.attr("transform",function(d) { return "translate("+rankScale(d.rating)+",0)";})
-	.style("fill",function(d) { return mapScale(Math.pow(d.rating,1)); })
-	.style("opacity",0.6); 
+
 
 	//append name at end
 	bar.append("text")
-	.attr("x", function(d) { return rankScale(d.rating)+saleScale(d.salesPerc)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
+	.attr("x", function(d) { return rankScale(d.rating)+15; }) //return countScale(d.count)+rankScale(d.rank)+15;
 	.attr("y", barHeight / 2)
 	.attr("dy", ".35em")
 	.style("font-size","14px")
@@ -368,23 +345,65 @@ function displayChocolate() {
 
 	//first bar rating text
 	bar.append("text")
-	.attr("x", 5)
+	.attr("x", 3)
 	.attr("y", barHeight / 2)
 	.attr("dy", ".35em")
-	.style("fill","black")
 	.style("font-size","13px")
 	.text(function(d) { return d.rating.toFixed(2); }); //only display to 2 decimal places
 
+	
+	//-------------- PERCENT BARPLOT -------------
+	
+	var barFill = "#99CC99";
+	//production % bar
+	barSvgPerc.append("rect")
+	.attr("width", legendH)
+	.attr("height", legendH)
+	.attr("y", 20)
+	.style("fill",barFill);
+
+	barSvgPerc.append("text")
+	.attr("x", legendH+5)
+	.attr("y", legendH+10)
+	.attr("dy", ".35em")
+	.style("font-size","15px")
+	.text("% of Global Chocolate Production"); 
+
+	//make sure all bars begin at different y
+	var barPerc = barSvgPerc.selectAll("g")
+	.data(rankData)
+	.enter().append("g")
+	.attr("transform", function(d, i) { return "translate(0," + (i+4) * barHeight + ")"; });
+
+
+	//-------- append bars and their values -----------
+
+
+	//sales bars
+	barPerc.append("rect")
+	.attr("width", function(d) { return saleScale(d.salesPerc); })
+	.attr("height", barHeight - 3) //adjust spacing b/w bars
+	//.attr("x",function(d) { return saleScale(d.salesPerc); })
+	.style("fill",barFill); 
+
+	//append name at end
+	barPerc.append("text")
+	.attr("x", function(d) {return saleScale(d.salesPerc)+15 ;}) //return countScale(d.count)+rankScale(d.rank)+15;
+	//.attr("text-anchor", "end")
+	//.attr("x", function(d) { return plotW - saleScale(d.salesPerc)-15; })
+	.attr("y", barHeight / 2)
+	.attr("dy", ".35em")
+	.style("font-size","14px")
+	.text(function(d) { return d.country; });
+
+
 	//2nd bar text, sales %
-	bar.append("text")
-	.attr("x", function(d) { return rankScale(d.rating)+saleScale(d.salesPerc)-28; })
+	barPerc.append("text")
+	.attr("x", 3)
 	.attr("y", barHeight/2 - 1)
 	.attr("dy", ".35em")
-	.style("fill","black")
 	.style("font-size","13px")
 	.text(function(d) { return d.salesPerc+"%"; }); 
-
-
 
 
 }
